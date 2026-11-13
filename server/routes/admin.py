@@ -1,21 +1,19 @@
-<<<<<<< HEAD
+
 
 from flask import Blueprint, request, jsonify
 
-=======
+
 from flask import Blueprint, request, jsonify
->>>>>>> main
+
 from server.extensions import db
 from server.models import User, LostItem, FoundItem
 from server.utils.decorators import admin_required
 
 admin_bp = Blueprint("admin", __name__)
 
-<<<<<<< HEAD
 
-=======
 # This route allows admins to view all registered users.
->>>>>>> main
+
 @admin_bp.route("/api/admin/users", methods=["GET"])
 @admin_required
 def get_users():
@@ -30,11 +28,8 @@ def get_users():
         for user in users
     ]), 200
 
-<<<<<<< HEAD
-
-=======
 # This route allows admins to change a user's role.
->>>>>>> main
+
 @admin_bp.route("/api/admin/users/<int:user_id>/role", methods=["PATCH"])
 @admin_required
 def update_user_role(user_id):
@@ -62,11 +57,10 @@ def update_user_role(user_id):
     }), 200
 
 
-<<<<<<< HEAD
-=======
+
 # ADMIN LOST AND FOUND ITEM MANAGEMENT
 # This route allows admins to view all lost items.
->>>>>>> main
+
 @admin_bp.route("/api/admin/lost-items", methods=["GET"])
 @admin_required
 def admin_get_lost_items():
@@ -86,11 +80,7 @@ def admin_get_lost_items():
         for item in items
     ]), 200
 
-<<<<<<< HEAD
 
-=======
-# This route allows admins to view all found items.
->>>>>>> main
 @admin_bp.route("/api/admin/found-items", methods=["GET"])
 @admin_required
 def admin_get_found_items():
@@ -111,10 +101,7 @@ def admin_get_found_items():
     ]), 200
 
 
-<<<<<<< HEAD
-=======
-# This route allows admins to update a lost item's status.
->>>>>>> main
+
 @admin_bp.route("/api/admin/lost-items/<int:item_id>", methods=["PATCH"])
 @admin_required
 def admin_update_lost_item(item_id):
@@ -137,10 +124,9 @@ def admin_update_lost_item(item_id):
     return jsonify({"message": "Lost item status updated"}), 200
 
 
-<<<<<<< HEAD
-=======
+
 # This route allows admins to update a found item's status.
->>>>>>> main
+
 @admin_bp.route("/api/admin/found-items/<int:item_id>", methods=["PATCH"])
 @admin_required
 def admin_update_found_item(item_id):
@@ -163,10 +149,9 @@ def admin_update_found_item(item_id):
     return jsonify({"message": "Found item status updated"}), 200
 
 
-<<<<<<< HEAD
-=======
+
 # This route allows admins to delete lost items.
->>>>>>> main
+
 @admin_bp.route("/api/admin/lost-items/<int:item_id>", methods=["DELETE"])
 @admin_required
 def admin_delete_lost_item(item_id):
@@ -181,10 +166,7 @@ def admin_delete_lost_item(item_id):
     return jsonify({"message": "Lost item deleted"}), 200
 
 
-<<<<<<< HEAD
-=======
-# This route allows admins to delete found items without claims.
->>>>>>> main
+
 @admin_bp.route("/api/admin/found-items/<int:item_id>", methods=["DELETE"])
 @admin_required
 def admin_delete_found_item(item_id):
