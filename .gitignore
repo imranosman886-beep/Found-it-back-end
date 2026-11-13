@@ -4,6 +4,3 @@ __pycache__/
 .env
 .pytest_cache/
 instance/
-# Local Python environment
-venv/
-.python-version
