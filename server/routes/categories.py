@@ -28,7 +28,7 @@ def create_category():
         return jsonify({"error": "Category name is required"}), 400
 
     if Category.query.filter_by(name=name).first():
-        return jsonify({"error": "Category already exists"}), 409
+        return jsonify({"error": "Category is already existing"}), 409
 
     category = Category(name=name)
 
