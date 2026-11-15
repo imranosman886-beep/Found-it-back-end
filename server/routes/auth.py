@@ -1,6 +1,4 @@
-
 from flask import Blueprint, request, jsonify, session
-
 from server.extensions import db
 from server.models import User
 
@@ -92,3 +90,4 @@ def logout():
     session.clear()
 
     return jsonify({"message": "Logged out successfully"}), 200
+
