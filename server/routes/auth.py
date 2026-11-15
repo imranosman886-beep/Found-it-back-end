@@ -3,6 +3,8 @@ from server.extensions import db
 from server.models import User
 
 auth_bp = Blueprint("auth", __name__)
+
+
 @auth_bp.route("/signup", methods=["POST"])
 def signup():
     data = request.get_json(silent=True) or {}
@@ -88,3 +90,4 @@ def logout():
     session.clear()
 
     return jsonify({"message": "Logged out successfully"}), 200
+

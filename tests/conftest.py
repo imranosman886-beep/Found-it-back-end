@@ -1,5 +1,7 @@
+
 import pytest
 from datetime import date
+
 from server import create_app
 from server.extensions import db
 from server.models import (
@@ -9,7 +11,7 @@ from server.models import (
     FoundItem,
 )
 
-# Create a test application with a temporary in-memory database
+
 @pytest.fixture
 def app():
     test_app = create_app({
@@ -19,24 +21,20 @@ def app():
         "SQLALCHEMY_TRACK_MODIFICATIONS": False,
     })
 
-    # Create the database tables before running tests
     with test_app.app_context():
         db.create_all()
 
         yield test_app
 
-        # Clean up the database after the tests finish
         db.session.remove()
         db.drop_all()
 
 
-# Provide a test client for sending requests to the application
 @pytest.fixture
 def client(app):
     return app.test_client()
 
 
-# Create a student account for use in tests
 @pytest.fixture
 def student(app):
     with app.app_context():
@@ -51,7 +49,7 @@ def student(app):
 
         return user.id
 
-# Create another student account for tests involving multiple users
+
 @pytest.fixture
 def another_student(app):
     with app.app_context():
@@ -66,7 +64,7 @@ def another_student(app):
 
         return user.id
 
-# Create an admin account for testing admin-only features
+
 @pytest.fixture
 def admin(app):
     with app.app_context():
@@ -81,7 +79,7 @@ def admin(app):
 
         return user.id
 
-# Create a category that can be used when creating items
+
 @pytest.fixture
 def category(app):
     with app.app_context():
@@ -92,7 +90,7 @@ def category(app):
 
         return new_category.id
 
-# Create a sample lost item for testing lost item routes
+
 @pytest.fixture
 def lost_item(app, student, category):
     with app.app_context():
@@ -111,7 +109,7 @@ def lost_item(app, student, category):
 
         return item.id
 
-# Create a sample found item for testing found item routes
+
 @pytest.fixture
 def found_item(app, student, category):
     with app.app_context():
@@ -130,7 +128,7 @@ def found_item(app, student, category):
 
         return item.id
 
-# Log in as a student and return the login response
+
 @pytest.fixture
 def login_student(client):
     response = client.post(
@@ -142,7 +140,7 @@ def login_student(client):
     )
     return response
 
-# Log in as an admin and return the login response
+
 @pytest.fixture
 def login_admin(client):
     response = client.post(
