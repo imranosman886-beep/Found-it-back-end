@@ -26,16 +26,9 @@ def serialize_claim(claim):
     }
 
 
-def can_manage_claim(claim):
+def can_manage_claim():
     user = db.session.get(User, session["user_id"])
-
-    return (
-        user
-        and (
-            user.role == "admin"
-            or claim.found_item.user_id == user.id
-        )
-    )
+    return user is not None and user.role == "admin"
 
 
 # Submit a claim
@@ -130,7 +123,7 @@ def get_all_claims():
     ]), 200
 
 
-# Approve or reject a claim
+# Approve or reject a claim (admin only)
 @claims_bp.route("/api/claims/<int:claim_id>", methods=["PATCH"])
 @login_required
 def update_claim(claim_id):
@@ -139,7 +132,7 @@ def update_claim(claim_id):
     if not claim:
         return jsonify({"error": "Claim not found"}), 404
 
-    if not can_manage_claim(claim):
+    if not can_manage_claim():
         return jsonify({
             "error": "You are not authorized to manage this claim"
         }), 403
@@ -197,7 +190,7 @@ def update_claim(claim_id):
     }), 200
 
 
-# Record completed handover
+# Record completed handover (admin only)
 @claims_bp.route(
     "/api/claims/<int:claim_id>/handover",
     methods=["POST"]
@@ -209,7 +202,7 @@ def complete_handover(claim_id):
     if not claim:
         return jsonify({"error": "Claim not found"}), 404
 
-    if not can_manage_claim(claim):
+    if not can_manage_claim():
         return jsonify({
             "error": "You are not authorized to record this handover"
         }), 403
