@@ -1,3 +1,4 @@
+from datetime import datetime
 
 from server.extensions import db, bcrypt
 
@@ -8,7 +9,7 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
-    role = db.Column(db.String(20), nullable=False, default="student")
+    role = db.Column(db.String(20), default="student", nullable=False)
 
     lost_items = db.relationship("LostItem", back_populates="user")
     found_items = db.relationship("FoundItem", back_populates="user")
@@ -16,10 +17,14 @@ class User(db.Model):
     notifications = db.relationship("Notification", back_populates="user")
 
     def set_password(self, password):
-        self.password_hash = bcrypt.generate_password_hash(password).decode("utf-8")
+        self.password_hash = bcrypt.generate_password_hash(
+            password
+        ).decode("utf-8")
 
     def check_password(self, password):
-        return bcrypt.check_password_hash(self.password_hash, password)
+        return bcrypt.check_password_hash(
+            self.password_hash, password
+        )
 
 
 class Category(db.Model):
@@ -41,11 +46,12 @@ class LostItem(db.Model):
     location = db.Column(db.String(200), nullable=False)
     date_lost = db.Column(db.Date, nullable=False)
     image_url = db.Column(db.String(500))
-
     status = db.Column(db.String(20), default="open", nullable=False)
 
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
-    category_id = db.Column(db.Integer, db.ForeignKey("categories.id"), nullable=False)
+    category_id = db.Column(
+        db.Integer, db.ForeignKey("categories.id"), nullable=False
+    )
 
     user = db.relationship("User", back_populates="lost_items")
     category = db.relationship("Category", back_populates="lost_items")
@@ -60,15 +66,21 @@ class FoundItem(db.Model):
     location = db.Column(db.String(200), nullable=False)
     date_found = db.Column(db.Date, nullable=False)
     image_url = db.Column(db.String(500))
-
     status = db.Column(db.String(20), default="available", nullable=False)
 
+    # Handover tracking
+    handover_completed = db.Column(
+        db.Boolean, default=False, nullable=False
+    )
+    handover_completed_at = db.Column(db.DateTime, nullable=True)
+
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
-    category_id = db.Column(db.Integer, db.ForeignKey("categories.id"), nullable=False)
+    category_id = db.Column(
+        db.Integer, db.ForeignKey("categories.id"), nullable=False
+    )
 
     user = db.relationship("User", back_populates="found_items")
     category = db.relationship("Category", back_populates="found_items")
-
     claims = db.relationship("Claim", back_populates="found_item")
 
 
@@ -80,7 +92,9 @@ class Claim(db.Model):
     status = db.Column(db.String(20), default="pending", nullable=False)
 
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
-    found_item_id = db.Column(db.Integer, db.ForeignKey("found_items.id"), nullable=False)
+    found_item_id = db.Column(
+        db.Integer, db.ForeignKey("found_items.id"), nullable=False
+    )
 
     user = db.relationship("User", back_populates="claims")
     found_item = db.relationship("FoundItem", back_populates="claims")
