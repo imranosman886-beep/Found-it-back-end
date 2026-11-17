@@ -1,6 +1,7 @@
 
 from flask import Flask
 from flask_cors import CORS
+from flasgger import Swagger
 
 from server.config import Config
 from server.extensions import db, migrate, bcrypt
@@ -24,12 +25,24 @@ def create_app(test_config=None):
     if test_config:
         app.config.update(test_config)
 
+    # Swagger configuration
+    app.config["SWAGGER"] = {
+        "title": "FoundIt API",
+        "description": "API documentation for the FoundIt Lost and Found platform.",
+        "version": "1.0.0",
+    }
+
+    Swagger(app)
+
+    # CORS configuration
     CORS(app, supports_credentials=True)
 
+    # Initialize extensions
     db.init_app(app)
     migrate.init_app(app, db)
     bcrypt.init_app(app)
 
+    # Register blueprints
     app.register_blueprint(auth_bp)
     app.register_blueprint(categories_bp)
     app.register_blueprint(lost_items_bp)
@@ -40,4 +53,3 @@ def create_app(test_config=None):
     app.register_blueprint(uploads_bp)
 
     return app
-
