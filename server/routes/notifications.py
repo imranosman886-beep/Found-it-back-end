@@ -20,6 +20,15 @@ def serialize_notification(notification):
 @notifications_bp.route("/api/notifications", methods=["GET"])
 @login_required
 def get_notifications():
+    """
+    Get your notifications.
+    ---
+    tags:
+      - Notifications
+    responses:
+      200:
+        description: List of your notifications
+    """
     notifications = Notification.query.filter_by(
         user_id=session["user_id"]
     ).order_by(Notification.id.desc()).all()
@@ -36,6 +45,24 @@ def get_notifications():
 )
 @login_required
 def mark_notification_read(notification_id):
+    """
+    Mark a notification as read.
+    ---
+    tags:
+      - Notifications
+    parameters:
+      - name: notification_id
+        in: path
+        type: integer
+        required: true
+    responses:
+      200:
+        description: Notification marked as read
+      403:
+        description: You cannot access this notification
+      404:
+        description: Notification not found
+    """
     notification = db.session.get(Notification, notification_id)
 
     if not notification:

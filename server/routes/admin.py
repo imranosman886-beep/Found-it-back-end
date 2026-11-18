@@ -11,6 +11,15 @@ admin_bp = Blueprint("admin", __name__)
 @admin_bp.route("/api/admin/users", methods=["GET"])
 @admin_required
 def get_users():
+    """
+    Get all users (admin only).
+    ---
+    tags:
+      - Administration
+    responses:
+      200:
+        description: List of users
+    """
     users = User.query.order_by(User.id.desc()).all()
 
     return jsonify([
@@ -26,6 +35,38 @@ def get_users():
 @admin_bp.route("/api/admin/users/<int:user_id>/role", methods=["PATCH"])
 @admin_required
 def update_user_role(user_id):
+    """
+    Update a user's role (admin only).
+    ---
+    tags:
+      - Administration
+    parameters:
+      - name: user_id
+        in: path
+        type: integer
+        required: true
+      - in: body
+        name: body
+        required: true
+        schema:
+          type: object
+          required:
+            - role
+          properties:
+            role:
+              type: string
+              enum:
+                - student
+                - admin
+              example: admin
+    responses:
+      200:
+        description: User role updated
+      400:
+        description: Invalid role
+      404:
+        description: User not found
+    """
     user = db.session.get(User, user_id)
 
     if not user:
@@ -53,6 +94,15 @@ def update_user_role(user_id):
 @admin_bp.route("/api/admin/lost-items", methods=["GET"])
 @admin_required
 def admin_get_lost_items():
+    """
+    Get all lost item reports (admin only).
+    ---
+    tags:
+      - Administration
+    responses:
+      200:
+        description: List of lost items
+    """
     items = LostItem.query.order_by(LostItem.id.desc()).all()
 
     return jsonify([
@@ -73,6 +123,15 @@ def admin_get_lost_items():
 @admin_bp.route("/api/admin/found-items", methods=["GET"])
 @admin_required
 def admin_get_found_items():
+    """
+    Get all found item reports (admin only).
+    ---
+    tags:
+      - Administration
+    responses:
+      200:
+        description: List of found items
+    """
     items = FoundItem.query.order_by(FoundItem.id.desc()).all()
 
     return jsonify([
@@ -93,6 +152,38 @@ def admin_get_found_items():
 @admin_bp.route("/api/admin/lost-items/<int:item_id>", methods=["PATCH"])
 @admin_required
 def admin_update_lost_item(item_id):
+    """
+    Update lost item status (admin only).
+    ---
+    tags:
+      - Administration
+    parameters:
+      - name: item_id
+        in: path
+        type: integer
+        required: true
+      - in: body
+        name: body
+        required: true
+        schema:
+          type: object
+          required:
+            - status
+          properties:
+            status:
+              type: string
+              enum:
+                - open
+                - resolved
+              example: resolved
+    responses:
+      200:
+        description: Lost item status updated
+      400:
+        description: Invalid status
+      404:
+        description: Lost item not found
+    """
     item = db.session.get(LostItem, item_id)
 
     if not item:
@@ -115,6 +206,39 @@ def admin_update_lost_item(item_id):
 @admin_bp.route("/api/admin/found-items/<int:item_id>", methods=["PATCH"])
 @admin_required
 def admin_update_found_item(item_id):
+    """
+    Update found item status (admin only).
+    ---
+    tags:
+      - Administration
+    parameters:
+      - name: item_id
+        in: path
+        type: integer
+        required: true
+      - in: body
+        name: body
+        required: true
+        schema:
+          type: object
+          required:
+            - status
+          properties:
+            status:
+              type: string
+              enum:
+                - available
+                - claimed
+                - returned
+              example: returned
+    responses:
+      200:
+        description: Found item status updated
+      400:
+        description: Invalid status
+      404:
+        description: Found item not found
+    """
     item = db.session.get(FoundItem, item_id)
 
     if not item:
@@ -137,6 +261,22 @@ def admin_update_found_item(item_id):
 @admin_bp.route("/api/admin/lost-items/<int:item_id>", methods=["DELETE"])
 @admin_required
 def admin_delete_lost_item(item_id):
+    """
+    Delete a lost item report (admin only).
+    ---
+    tags:
+      - Administration
+    parameters:
+      - name: item_id
+        in: path
+        type: integer
+        required: true
+    responses:
+      200:
+        description: Lost item deleted
+      404:
+        description: Lost item not found
+    """
     item = db.session.get(LostItem, item_id)
 
     if not item:
@@ -151,6 +291,24 @@ def admin_delete_lost_item(item_id):
 @admin_bp.route("/api/admin/found-items/<int:item_id>", methods=["DELETE"])
 @admin_required
 def admin_delete_found_item(item_id):
+    """
+    Delete a found item report (admin only).
+    ---
+    tags:
+      - Administration
+    parameters:
+      - name: item_id
+        in: path
+        type: integer
+        required: true
+    responses:
+      200:
+        description: Found item deleted
+      404:
+        description: Found item not found
+      409:
+        description: Item has unresolved claims
+    """
     item = db.session.get(FoundItem, item_id)
 
     if not item:

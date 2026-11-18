@@ -1,5 +1,7 @@
+
 import cloudinary.uploader
 from flask import Blueprint, request, jsonify
+
 from server.utils.decorators import login_required
 from server.utils.cloudinary_config import configure_cloudinary
 
@@ -9,6 +11,25 @@ uploads_bp = Blueprint("uploads", __name__)
 @uploads_bp.route("/api/upload-image", methods=["POST"])
 @login_required
 def upload_image():
+    """
+    Upload an item image.
+    ---
+    tags:
+      - Uploads
+    consumes:
+      - multipart/form-data
+    parameters:
+      - name: image
+        in: formData
+        type: file
+        required: true
+        description: Image file (PNG, JPG, JPEG or WEBP)
+    responses:
+      201:
+        description: Image uploaded successfully
+      400:
+        description: Missing image or unsupported format
+    """
     if "image" not in request.files:
         return jsonify({"error": "Image file is required"}), 400
 

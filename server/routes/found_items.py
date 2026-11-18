@@ -27,6 +27,32 @@ def serialize_found_item(item):
 
 @found_items_bp.route("/api/found-items", methods=["GET"])
 def get_found_items():
+    """
+    Get all found items.
+    ---
+    tags:
+      - Found Items
+    parameters:
+      - name: page
+        in: query
+        type: integer
+        default: 1
+      - name: per_page
+        in: query
+        type: integer
+        default: 10
+      - name: search
+        in: query
+        type: string
+      - name: category_id
+        in: query
+        type: integer
+    responses:
+      200:
+        description: Paginated found items
+      400:
+        description: Invalid pagination values
+    """
     page = request.args.get("page", 1, type=int)
     per_page = request.args.get("per_page", 10, type=int)
 
@@ -34,7 +60,6 @@ def get_found_items():
         return jsonify({"error": "Invalid pagination values"}), 400
 
     query = FoundItem.query
-
     search = request.args.get("search", "").strip()
 
     if search:
@@ -59,6 +84,22 @@ def get_found_items():
 
 @found_items_bp.route("/api/found-items/<int:item_id>", methods=["GET"])
 def get_found_item(item_id):
+    """
+    Get one found item.
+    ---
+    tags:
+      - Found Items
+    parameters:
+      - name: item_id
+        in: path
+        type: integer
+        required: true
+    responses:
+      200:
+        description: Found item details
+      404:
+        description: Found item not found
+    """
     item = db.session.get(FoundItem, item_id)
 
     if not item:
@@ -70,6 +111,51 @@ def get_found_item(item_id):
 @found_items_bp.route("/api/found-items", methods=["POST"])
 @login_required
 def create_found_item():
+    """
+    Report a found item.
+    ---
+    tags:
+      - Found Items
+    parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          type: object
+          required:
+            - item_name
+            - description
+            - location
+            - date_found
+            - category_id
+          properties:
+            item_name:
+              type: string
+              example: Samsung phone
+            description:
+              type: string
+              example: Black Samsung phone found near the cafeteria
+            location:
+              type: string
+              example: Campus cafeteria
+            date_found:
+              type: string
+              format: date
+              example: "2026-11-15"
+            category_id:
+              type: integer
+              example: 1
+            image_url:
+              type: string
+              example: https://example.com/image.jpg
+    responses:
+      201:
+        description: Found item reported
+      400:
+        description: Missing or invalid information
+      404:
+        description: Category not found
+    """
     data = request.get_json(silent=True) or {}
 
     required_fields = [
@@ -114,6 +200,45 @@ def create_found_item():
 @found_items_bp.route("/api/found-items/<int:item_id>", methods=["PATCH"])
 @login_required
 def update_found_item(item_id):
+    """
+    Update your found item report.
+    ---
+    tags:
+      - Found Items
+    parameters:
+      - name: item_id
+        in: path
+        type: integer
+        required: true
+      - in: body
+        name: body
+        required: true
+        schema:
+          type: object
+          properties:
+            item_name:
+              type: string
+            description:
+              type: string
+            location:
+              type: string
+            image_url:
+              type: string
+            date_found:
+              type: string
+              format: date
+            category_id:
+              type: integer
+    responses:
+      200:
+        description: Found item updated
+      400:
+        description: Invalid information
+      403:
+        description: You cannot edit this report
+      404:
+        description: Found item or category not found
+    """
     item = db.session.get(FoundItem, item_id)
 
     if not item:
@@ -165,6 +290,26 @@ def update_found_item(item_id):
 @found_items_bp.route("/api/found-items/<int:item_id>", methods=["DELETE"])
 @login_required
 def delete_found_item(item_id):
+    """
+    Delete your found item report.
+    ---
+    tags:
+      - Found Items
+    parameters:
+      - name: item_id
+        in: path
+        type: integer
+        required: true
+    responses:
+      200:
+        description: Found item deleted
+      403:
+        description: You cannot delete this report
+      404:
+        description: Found item not found
+      409:
+        description: Item has claims
+    """
     item = db.session.get(FoundItem, item_id)
 
     if not item:
