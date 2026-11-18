@@ -1,5 +1,5 @@
 
-from datetime import datetime
+from datetime import datetime, timezone
 
 from flask import Blueprint, request, jsonify, session
 
@@ -322,7 +322,7 @@ def complete_handover(claim_id):
         }), 409
 
     found_item.handover_completed = True
-    found_item.handover_completed_at = datetime.utcnow()
+    found_item.handover_completed_at = datetime.now(timezone.utc)
 
     db.session.add(Notification(
         message="Your claimed item has been marked as handed over.",
