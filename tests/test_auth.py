@@ -145,3 +145,73 @@ def test_logout(client, student):
 
     session_response = client.get("/check_session")
     assert session_response.get_json()["logged_in"] is False
+
+
+# Invalid signup input tests
+
+def test_signup_rejects_non_string_email(client):
+    response = client.post(
+        "/signup",
+        json={
+            "email": 123,
+            "password": "password123",
+        },
+    )
+
+    assert response.status_code == 400
+
+
+def test_signup_rejects_non_string_password(client):
+    response = client.post(
+        "/signup",
+        json={
+            "email": "newstudent@test.com",
+            "password": 123,
+        },
+    )
+
+    assert response.status_code == 400
+
+
+def test_signup_rejects_non_object_json(client):
+    response = client.post(
+        "/signup",
+        json=["student@test.com", "password123"],
+    )
+
+    assert response.status_code == 400
+
+
+# Invalid login input tests
+
+def test_login_rejects_non_string_email(client):
+    response = client.post(
+        "/login",
+        json={
+            "email": 123,
+            "password": "password123",
+        },
+    )
+
+    assert response.status_code == 400
+
+
+def test_login_rejects_non_string_password(client):
+    response = client.post(
+        "/login",
+        json={
+            "email": "student@test.com",
+            "password": 123,
+        },
+    )
+
+    assert response.status_code == 400
+
+
+def test_login_rejects_non_object_json(client):
+    response = client.post(
+        "/login",
+        json=["student@test.com", "password123"],
+    )
+
+    assert response.status_code == 400

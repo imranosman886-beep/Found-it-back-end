@@ -1,9 +1,47 @@
 
 from flask import Blueprint, request, jsonify, session
+from sqlalchemy.exc import IntegrityError
+
 from server.extensions import db
 from server.models import User
 
 auth_bp = Blueprint("auth", __name__)
+
+
+def get_credentials():
+    """Validate and return email and password from the request."""
+    data = request.get_json(silent=True)
+
+    if not isinstance(data, dict):
+        return None, None, (
+            jsonify({"error": "Request body must be a JSON object"}),
+            400
+        )
+
+    email = data.get("email")
+    password = data.get("password")
+
+    if not isinstance(email, str) or not isinstance(password, str):
+        return None, None, (
+            jsonify({"error": "Email and password must be strings"}),
+            400
+        )
+
+    email = email.strip().lower()
+
+    if not email or not password:
+        return None, None, (
+            jsonify({"error": "Email and password are required"}),
+            400
+        )
+
+    if "@" not in email:
+        return None, None, (
+            jsonify({"error": "Please provide a valid email address"}),
+            400
+        )
+
+    return email, password, None
 
 
 @auth_bp.route("/signup", methods=["POST"])
@@ -37,20 +75,24 @@ def signup():
       201:
         description: Account created successfully
       400:
-        description: Missing email or password, or password too short
+        description: Invalid input or password too short
       409:
         description: Email already registered
     """
-    data = request.get_json(silent=True) or {}
+    email, password, error = get_credentials()
 
-    email = data.get("email", "").strip().lower()
-    password = data.get("password", "")
-
-    if not email or not password:
-        return jsonify({"error": "Email and password are required"}), 400
+    if error:
+        return error
 
     if len(password) < 8:
-        return jsonify({"error": "Password must be at least 8 characters"}), 400
+        return jsonify({
+            "error": "Password must be at least 8 characters"
+        }), 400
+
+    if len(password.encode("utf-8")) > 72:
+        return jsonify({
+            "error": "Password must not exceed 72 bytes"
+        }), 400
 
     if User.query.filter_by(email=email).first():
         return jsonify({"error": "Email already registered"}), 409
@@ -58,8 +100,12 @@ def signup():
     user = User(email=email, role="student")
     user.set_password(password)
 
-    db.session.add(user)
-    db.session.commit()
+    try:
+        db.session.add(user)
+        db.session.commit()
+    except IntegrityError:
+        db.session.rollback()
+        return jsonify({"error": "Email already registered"}), 409
 
     return jsonify({
         "message": "Account created successfully",
@@ -101,17 +147,19 @@ def login():
     responses:
       200:
         description: Login successful
+      400:
+        description: Invalid input
       401:
         description: Invalid email or password
     """
-    data = request.get_json(silent=True) or {}
+    email, password, error = get_credentials()
 
-    email = data.get("email", "").strip().lower()
-    password = data.get("password", "")
+    if error:
+        return error
 
     user = User.query.filter_by(email=email).first()
 
-    if not user or not isinstance(password, str) or not user.check_password(password):
+    if not user or not user.check_password(password):
         return jsonify({"error": "Invalid email or password"}), 401
 
     session.clear()
