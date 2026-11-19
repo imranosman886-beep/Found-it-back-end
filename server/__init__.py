@@ -35,7 +35,11 @@ def create_app(test_config=None):
     Swagger(app)
 
     # CORS configuration
-    CORS(app, supports_credentials=True)
+    CORS(
+        app,
+        origins=["http://localhost:5173"],
+        supports_credentials=True,
+    )
 
     # Initialize extensions
     db.init_app(app)
