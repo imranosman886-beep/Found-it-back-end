@@ -37,7 +37,10 @@ def create_app(test_config=None):
     # CORS configuration
     CORS(
         app,
-        origins=["http://localhost:5173"],
+        origins=[
+            "http://localhost:5173",
+            "https://found-it-frontend2.vercel.app",
+        ],
         supports_credentials=True,
     )
 
