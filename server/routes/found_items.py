@@ -173,6 +173,9 @@ def create_found_item():
     except (ValueError, TypeError):
         return jsonify({"error": "Invalid date or category ID"}), 400
 
+    if found_date > date.today():
+        return jsonify({"error": "Found date cannot be in the future"}), 400
+
     category = db.session.get(Category, category_id)
 
     if not category:
@@ -264,9 +267,14 @@ def update_found_item(item_id):
 
     if "date_found" in data:
         try:
-            item.date_found = date.fromisoformat(data["date_found"])
+            found_date = date.fromisoformat(data["date_found"])
         except (ValueError, TypeError):
             return jsonify({"error": "Invalid date_found"}), 400
+
+        if found_date > date.today():
+            return jsonify({"error": "Found date cannot be in the future"}), 400
+
+        item.date_found = found_date
 
     if "category_id" in data:
         try:

@@ -23,9 +23,12 @@ def get_json_data():
 
 
 def validate_password(password):
-    """Validate password length."""
+    """Validate password strength."""
+
     if not isinstance(password, str):
-        return jsonify({"error": "Password must be a string"}), 400
+        return jsonify({
+            "error": "Password must be a string"
+        }), 400
 
     if len(password) < 8:
         return jsonify({
@@ -35,6 +38,21 @@ def validate_password(password):
     if len(password.encode("utf-8")) > 72:
         return jsonify({
             "error": "Password must not exceed 72 bytes"
+        }), 400
+
+    if not any(char.isupper() for char in password):
+        return jsonify({
+            "error": "Password must contain at least one uppercase letter"
+        }), 400
+
+    if not any(char.islower() for char in password):
+        return jsonify({
+            "error": "Password must contain at least one lowercase letter"
+        }), 400
+
+    if not any(char.isdigit() for char in password):
+        return jsonify({
+            "error": "Password must contain at least one number"
         }), 400
 
     return None
@@ -81,7 +99,7 @@ def signup():
               enum: [student, staff]
             password:
               type: string
-              example: password123
+              example: Password123
     responses:
       201:
         description: Account created successfully
@@ -251,7 +269,7 @@ def login():
               example: admin@example.com
             password:
               type: string
-              example: password123
+              example: Password123
     responses:
       200:
         description: Login successful

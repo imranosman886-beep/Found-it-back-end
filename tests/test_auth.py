@@ -8,7 +8,7 @@ def test_signup_success(client, approved_student_credential):
             "institutional_id": "MOR-STU-TEST",
             "university_code": "MOR",
             "account_type": "student",
-            "password": "password123",
+            "password": "Password123",
         },
     )
 
@@ -25,7 +25,7 @@ def test_staff_signup_success(client, approved_staff_credential):
             "institutional_id": "MOR-STF-TEST",
             "university_code": "MOR",
             "account_type": "staff",
-            "password": "password123",
+            "password": "Password123",
         },
     )
 
@@ -38,7 +38,7 @@ def test_signup_missing_information(client):
         "/signup",
         json={
             "email": "student.test@moringaschool.com",
-            "password": "password123",
+            "password": "Password123",
         },
     )
 
@@ -54,11 +54,62 @@ def test_signup_short_password(client, approved_student_credential):
             "institutional_id": "MOR-STU-TEST",
             "university_code": "MOR",
             "account_type": "student",
-            "password": "short",
+            "password": "Short1",
         },
     )
 
     assert response.status_code == 400
+
+
+def test_signup_password_requires_uppercase(client, approved_student_credential):
+    response = client.post(
+        "/signup",
+        json={
+            "full_name": "Test Student",
+            "email": "student.test@moringaschool.com",
+            "institutional_id": "MOR-STU-TEST",
+            "university_code": "MOR",
+            "account_type": "student",
+            "password": "password123",
+        },
+    )
+
+    assert response.status_code == 400
+    assert "uppercase" in response.json["error"]
+
+
+def test_signup_password_requires_lowercase(client, approved_student_credential):
+    response = client.post(
+        "/signup",
+        json={
+            "full_name": "Test Student",
+            "email": "student.test@moringaschool.com",
+            "institutional_id": "MOR-STU-TEST",
+            "university_code": "MOR",
+            "account_type": "student",
+            "password": "PASSWORD123",
+        },
+    )
+
+    assert response.status_code == 400
+    assert "lowercase" in response.json["error"]
+
+
+def test_signup_password_requires_number(client, approved_student_credential):
+    response = client.post(
+        "/signup",
+        json={
+            "full_name": "Test Student",
+            "email": "student.test@moringaschool.com",
+            "institutional_id": "MOR-STU-TEST",
+            "university_code": "MOR",
+            "account_type": "student",
+            "password": "PasswordOnly",
+        },
+    )
+
+    assert response.status_code == 400
+    assert "number" in response.json["error"]
 
 
 def test_signup_unapproved_id(client, university):
@@ -70,7 +121,7 @@ def test_signup_unapproved_id(client, university):
             "institutional_id": "MOR-STU-999",
             "university_code": "MOR",
             "account_type": "student",
-            "password": "password123",
+            "password": "Password123",
         },
     )
 
@@ -87,7 +138,7 @@ def test_signup_wrong_email(client, approved_student_credential):
             "institutional_id": "MOR-STU-TEST",
             "university_code": "MOR",
             "account_type": "student",
-            "password": "password123",
+            "password": "Password123",
         },
     )
 
@@ -103,7 +154,7 @@ def test_signup_wrong_account_type(client, approved_student_credential):
             "institutional_id": "MOR-STU-TEST",
             "university_code": "MOR",
             "account_type": "staff",
-            "password": "password123",
+            "password": "Password123",
         },
     )
 
@@ -120,7 +171,7 @@ def test_signup_duplicate_credential(
         "institutional_id": "MOR-STU-TEST",
         "university_code": "MOR",
         "account_type": "student",
-        "password": "password123",
+        "password": "Password123",
     }
 
     first_response = client.post(
@@ -146,7 +197,7 @@ def test_signup_rejects_admin_account(client):
             "institutional_id": "MOR-ADMIN-001",
             "university_code": "MOR",
             "account_type": "admin",
-            "password": "password123",
+            "password": "Password123",
         },
     )
 
@@ -165,7 +216,7 @@ def test_login_success(
             "institutional_id": "MOR-STU-TEST",
             "university_code": "MOR",
             "account_type": "student",
-            "password": "password123",
+            "password": "Password123",
         },
     )
 
@@ -173,7 +224,7 @@ def test_login_success(
         "/login",
         json={
             "institutional_id": "MOR-STU-TEST",
-            "password": "password123",
+            "password": "Password123",
         },
     )
 
@@ -192,7 +243,7 @@ def test_login_wrong_password(
             "institutional_id": "MOR-STU-TEST",
             "university_code": "MOR",
             "account_type": "student",
-            "password": "password123",
+            "password": "Password123",
         },
     )
 
@@ -200,7 +251,7 @@ def test_login_wrong_password(
         "/login",
         json={
             "institutional_id": "MOR-STU-TEST",
-            "password": "wrongpassword",
+            "password": "WrongPassword123",
         },
     )
 
@@ -212,7 +263,7 @@ def test_login_unknown_id(client):
         "/login",
         json={
             "institutional_id": "MOR-STU-999",
-            "password": "password123",
+            "password": "Password123",
         },
     )
 
@@ -224,7 +275,7 @@ def test_login_rejects_non_string_id(client):
         "/login",
         json={
             "institutional_id": 123,
-            "password": "password123",
+            "password": "Password123",
         },
     )
 
@@ -289,7 +340,7 @@ def test_signup_rejects_non_string_email(client):
             "institutional_id": "MOR-STU-TEST",
             "university_code": "MOR",
             "account_type": "student",
-            "password": "password123",
+            "password": "Password123",
         },
     )
 
@@ -299,7 +350,7 @@ def test_signup_rejects_non_string_email(client):
 def test_login_rejects_non_object_json(client):
     response = client.post(
         "/login",
-        json=["MOR-STU-TEST", "password123"],
+        json=["MOR-STU-TEST", "Password123"],
     )
 
     assert response.status_code == 400

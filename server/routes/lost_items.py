@@ -173,6 +173,9 @@ def create_lost_item():
     except (ValueError, TypeError):
         return jsonify({"error": "Invalid date or category ID"}), 400
 
+    if lost_date > date.today():
+        return jsonify({"error": "Lost date cannot be in the future"}), 400
+
     category = db.session.get(Category, category_id)
 
     if not category:
@@ -264,9 +267,14 @@ def update_lost_item(item_id):
 
     if "date_lost" in data:
         try:
-            item.date_lost = date.fromisoformat(data["date_lost"])
+            lost_date = date.fromisoformat(data["date_lost"])
         except (ValueError, TypeError):
             return jsonify({"error": "Invalid date_lost"}), 400
+
+        if lost_date > date.today():
+            return jsonify({"error": "Lost date cannot be in the future"}), 400
+
+        item.date_lost = lost_date
 
     if "category_id" in data:
         try:
