@@ -25,8 +25,11 @@ def get_users():
     return jsonify([
         {
             "id": user.id,
+            "full_name": user.full_name,
             "email": user.email,
-            "role": user.role
+            "institutional_id": user.institutional_id,
+            "role": user.role,
+            "university": user.university.name if user.university else None
         }
         for user in users
     ]), 200
@@ -57,8 +60,8 @@ def update_user_role(user_id):
               type: string
               enum:
                 - student
+                - staff
                 - admin
-              example: admin
     responses:
       200:
         description: User role updated
@@ -72,11 +75,17 @@ def update_user_role(user_id):
     if not user:
         return jsonify({"error": "User not found"}), 404
 
-    data = request.get_json(silent=True) or {}
+    data = request.get_json(silent=True)
+
+    if not isinstance(data, dict):
+        return jsonify({"error": "Request body must be a JSON object"}), 400
+
     role = data.get("role")
 
-    if role not in ["student", "admin"]:
-        return jsonify({"error": "Role must be student or admin"}), 400
+    if role not in ["student", "staff", "admin"]:
+        return jsonify({
+            "error": "Role must be student, staff or admin"
+        }), 400
 
     user.role = role
     db.session.commit()
@@ -175,7 +184,6 @@ def admin_update_lost_item(item_id):
               enum:
                 - open
                 - resolved
-              example: resolved
     responses:
       200:
         description: Lost item status updated
@@ -230,7 +238,6 @@ def admin_update_found_item(item_id):
                 - available
                 - claimed
                 - returned
-              example: returned
     responses:
       200:
         description: Found item status updated

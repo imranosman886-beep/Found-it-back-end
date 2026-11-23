@@ -9,6 +9,8 @@ from server.models import (
     Category,
     LostItem,
     FoundItem,
+    University,
+    UniversityCredential,
 )
 
 
@@ -33,6 +35,52 @@ def app():
 @pytest.fixture
 def client(app):
     return app.test_client()
+
+
+@pytest.fixture
+def university(app):
+    with app.app_context():
+        university = University(
+            name="Moringa School",
+            code="MOR",
+        )
+
+        db.session.add(university)
+        db.session.commit()
+
+        return university.id
+
+
+@pytest.fixture
+def approved_student_credential(app, university):
+    with app.app_context():
+        credential = UniversityCredential(
+            institutional_id="MOR-STU-TEST",
+            institutional_email="student.test@moringaschool.com",
+            account_type="student",
+            university_id=university,
+        )
+
+        db.session.add(credential)
+        db.session.commit()
+
+        return credential.id
+
+
+@pytest.fixture
+def approved_staff_credential(app, university):
+    with app.app_context():
+        credential = UniversityCredential(
+            institutional_id="MOR-STF-TEST",
+            institutional_email="staff.test@moringaschool.com",
+            account_type="staff",
+            university_id=university,
+        )
+
+        db.session.add(credential)
+        db.session.commit()
+
+        return credential.id
 
 
 @pytest.fixture
@@ -131,23 +179,21 @@ def found_item(app, student, category):
 
 @pytest.fixture
 def login_student(client):
-    response = client.post(
+    return client.post(
         "/login",
         json={
             "email": "student@test.com",
             "password": "password123",
         },
     )
-    return response
 
 
 @pytest.fixture
 def login_admin(client):
-    response = client.post(
+    return client.post(
         "/login",
         json={
             "email": "admin@test.com",
             "password": "adminpass123",
         },
     )
-    return response
