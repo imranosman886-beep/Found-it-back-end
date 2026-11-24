@@ -61,53 +61,9 @@ def validate_password(password):
 @auth_bp.route("/signup", methods=["POST"])
 def signup():
     """
-    Register a student or staff member.
-    ---
-    tags:
-      - Authentication
-    summary: Register a university account
-    consumes:
-      - application/json
-    parameters:
-      - in: body
-        name: body
-        required: true
-        schema:
-          type: object
-          required:
-            - full_name
-            - email
-            - institutional_id
-            - university_code
-            - account_type
-            - password
-          properties:
-            full_name:
-              type: string
-              example: Jane Student
-            email:
-              type: string
-              example: student001@moringaschool.com
-            institutional_id:
-              type: string
-              example: MOR-STU-001
-            university_code:
-              type: string
-              example: MOR
-            account_type:
-              type: string
-              enum: [student, staff]
-            password:
-              type: string
-              example: Password123
-    responses:
-      201:
-        description: Account created successfully
-      400:
-        description: Invalid registration information
-      409:
-        description: Account or credential already registered
+    Register a student or staff member and automatically log them in.
     """
+
     data, error = get_json_data()
 
     if error:
@@ -228,6 +184,10 @@ def signup():
             "error": "This account information is already registered"
         }), 409
 
+    # Automatically create a session after successful signup.
+    session.clear()
+    session["user_id"] = user.id
+
     return jsonify({
         "message": "Account created successfully",
         "user": {
@@ -246,38 +206,8 @@ def login():
     """
     Log in a user using their institutional ID and password.
     Existing legacy accounts can still use email login.
-    ---
-    tags:
-      - Authentication
-    summary: User login
-    consumes:
-      - application/json
-    parameters:
-      - in: body
-        name: body
-        required: true
-        schema:
-          type: object
-          required:
-            - password
-          properties:
-            institutional_id:
-              type: string
-              example: MOR-STU-001
-            email:
-              type: string
-              example: admin@example.com
-            password:
-              type: string
-              example: Password123
-    responses:
-      200:
-        description: Login successful
-      400:
-        description: Invalid input
-      401:
-        description: Invalid ID or password
     """
+
     data, error = get_json_data()
 
     if error:
@@ -321,7 +251,6 @@ def login():
         if not email:
             return jsonify({"error": "Email is required"}), 400
 
-        # Email login is retained for older accounts.
         user = User.query.filter_by(email=email).first()
 
         if user and user.institutional_id:
@@ -354,16 +283,8 @@ def login():
 
 @auth_bp.route("/check_session", methods=["GET"])
 def check_session():
-    """
-    Check the current user's session.
-    ---
-    tags:
-      - Authentication
-    summary: Check session
-    responses:
-      200:
-        description: Session status returned successfully
-    """
+    """Check the current user's session."""
+
     user_id = session.get("user_id")
 
     if not user_id:
@@ -389,16 +310,8 @@ def check_session():
 
 @auth_bp.route("/logout", methods=["DELETE"])
 def logout():
-    """
-    Log out the current user.
-    ---
-    tags:
-      - Authentication
-    summary: User logout
-    responses:
-      200:
-        description: Logged out successfully
-    """
+    """Log out the current user."""
+
     session.clear()
 
     return jsonify({

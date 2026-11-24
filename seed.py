@@ -23,24 +23,29 @@ def seed_university():
             db.session.add(university)
             db.session.commit()
 
-        demo_credentials = [
-            {
-                "institutional_id": "MOR-STU-001",
-                "institutional_email": "student001@moringaschool.com",
-                "account_type": "student",
-            },
-            {
-                "institutional_id": "MOR-STU-002",
-                "institutional_email": "student002@moringaschool.com",
-                "account_type": "student",
-            },
-            {
-                "institutional_id": "MOR-STF-001",
-                "institutional_email": "staff001@moringaschool.com",
-                "account_type": "staff",
-            },
-        ]
+        demo_credentials = []
 
+        # Create 15 student credentials.
+        for number in range(1, 16):
+            demo_credentials.append({
+                "institutional_id": f"MOR-STU-{number:03d}",
+                "institutional_email": (
+                    f"student{number:03d}@moringaschool.com"
+                ),
+                "account_type": "student",
+            })
+
+        # Create 15 staff credentials.
+        for number in range(1, 16):
+            demo_credentials.append({
+                "institutional_id": f"MOR-STF-{number:03d}",
+                "institutional_email": (
+                    f"staff{number:03d}@moringaschool.com"
+                ),
+                "account_type": "staff",
+            })
+
+        # Save credentials without creating duplicates.
         for credential in demo_credentials:
             existing = UniversityCredential.query.filter_by(
                 university_id=university.id,
@@ -60,6 +65,7 @@ def seed_university():
         db.session.commit()
 
         print("Demo university records created successfully.")
+        print("15 student credentials and 15 staff credentials checked.")
 
 
 if __name__ == "__main__":
