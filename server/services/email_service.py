@@ -1,5 +1,4 @@
 
-import os
 from flask import current_app
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
@@ -15,16 +14,16 @@ def send_email(to_email, subject, content):
         content: Plain-text email content.
 
     Returns:
-        True if the email was accepted by SendGrid.
-        False if sending failed.
+        True if SendGrid accepts the email.
+        False if sending fails.
     """
+
     api_key = current_app.config.get("SENDGRID_API_KEY")
+    sender_email = current_app.config.get("SENDGRID_FROM_EMAIL")
 
     if not api_key:
         current_app.logger.error("SendGrid API key is missing.")
         return False
-
-    sender_email = os.getenv("SENDGRID_FROM_EMAIL")
 
     if not sender_email:
         current_app.logger.error("SendGrid sender email is missing.")
@@ -46,7 +45,8 @@ def send_email(to_email, subject, content):
             return True
 
         current_app.logger.error(
-            "SendGrid returned status %s", response.status_code
+            "SendGrid returned status %s",
+            response.status_code
         )
         return False
 

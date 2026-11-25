@@ -14,6 +14,7 @@ class University(db.Model):
     code = db.Column(db.String(20), unique=True, nullable=False)
 
     users = db.relationship("User", back_populates="university")
+
     approved_credentials = db.relationship(
         "UniversityCredential",
         back_populates="university",
@@ -62,7 +63,17 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
 
     full_name = db.Column(db.String(120), nullable=True)
+
+    # Approved institutional email
     email = db.Column(db.String(120), unique=True, nullable=False)
+
+    # Personal email for notifications and SendGrid
+    contact_email = db.Column(
+        db.String(120),
+        unique=True,
+        nullable=True,
+    )
+
     institutional_id = db.Column(db.String(50), nullable=True)
 
     university_id = db.Column(
@@ -121,7 +132,12 @@ class LostItem(db.Model):
     image_url = db.Column(db.String(500))
     status = db.Column(db.String(20), default="open", nullable=False)
 
-    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    user_id = db.Column(
+        db.Integer,
+        db.ForeignKey("users.id"),
+        nullable=False,
+    )
+
     category_id = db.Column(
         db.Integer,
         db.ForeignKey("categories.id"),
@@ -145,7 +161,12 @@ class FoundItem(db.Model):
     handover_completed = db.Column(db.Boolean, default=False, nullable=False)
     handover_completed_at = db.Column(db.DateTime, nullable=True)
 
-    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    user_id = db.Column(
+        db.Integer,
+        db.ForeignKey("users.id"),
+        nullable=False,
+    )
+
     category_id = db.Column(
         db.Integer,
         db.ForeignKey("categories.id"),
@@ -153,7 +174,12 @@ class FoundItem(db.Model):
     )
 
     user = db.relationship("User", back_populates="found_items")
-    category = db.relationship("Category", back_populates="found_items")
+
+    category = db.relationship(
+        "Category",
+        back_populates="found_items",
+    )
+
     claims = db.relationship("Claim", back_populates="found_item")
 
 
@@ -164,7 +190,12 @@ class Claim(db.Model):
     message = db.Column(db.Text, nullable=False)
     status = db.Column(db.String(20), default="pending", nullable=False)
 
-    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    user_id = db.Column(
+        db.Integer,
+        db.ForeignKey("users.id"),
+        nullable=False,
+    )
+
     found_item_id = db.Column(
         db.Integer,
         db.ForeignKey("found_items.id"),
@@ -172,7 +203,11 @@ class Claim(db.Model):
     )
 
     user = db.relationship("User", back_populates="claims")
-    found_item = db.relationship("FoundItem", back_populates="claims")
+
+    found_item = db.relationship(
+        "FoundItem",
+        back_populates="claims",
+    )
 
 
 class Notification(db.Model):
@@ -182,5 +217,10 @@ class Notification(db.Model):
     message = db.Column(db.Text, nullable=False)
     is_read = db.Column(db.Boolean, default=False, nullable=False)
 
-    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    user_id = db.Column(
+        db.Integer,
+        db.ForeignKey("users.id"),
+        nullable=False,
+    )
+
     user = db.relationship("User", back_populates="notifications")

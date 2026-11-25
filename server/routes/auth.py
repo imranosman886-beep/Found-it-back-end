@@ -4,6 +4,7 @@ from sqlalchemy.exc import IntegrityError
 
 from server.extensions import db
 from server.models import User, University, UniversityCredential
+from server.services.email_service import send_email
 
 
 auth_bp = Blueprint("auth", __name__)
@@ -11,6 +12,7 @@ auth_bp = Blueprint("auth", __name__)
 
 def get_json_data():
     """Return the request JSON if it is a valid object."""
+
     data = request.get_json(silent=True)
 
     if not isinstance(data, dict):
@@ -58,10 +60,37 @@ def validate_password(password):
     return None
 
 
+def validate_email(email):
+    """Perform basic email address validation."""
+
+    if not isinstance(email, str):
+        return False
+
+    email = email.strip()
+
+    if len(email) > 120:
+        return False
+
+    if "@" not in email:
+        return False
+
+    local_part, separator, domain = email.partition("@")
+
+    return bool(
+        separator
+        and local_part
+        and domain
+        and "." in domain
+        and not domain.startswith(".")
+        and not domain.endswith(".")
+    )
+
+
 @auth_bp.route("/signup", methods=["POST"])
 def signup():
     """
-    Register a student or staff member and automatically log them in.
+    Register a student or staff member,
+    send a welcome email, and automatically log them in.
     """
 
     data, error = get_json_data()
@@ -71,6 +100,7 @@ def signup():
 
     full_name = data.get("full_name")
     email = data.get("email")
+    contact_email = data.get("contact_email")
     institutional_id = data.get("institutional_id")
     university_code = data.get("university_code")
     account_type = data.get("account_type")
@@ -79,6 +109,7 @@ def signup():
     if not all([
         full_name,
         email,
+        contact_email,
         institutional_id,
         university_code,
         account_type,
@@ -91,6 +122,7 @@ def signup():
     if not all(isinstance(value, str) for value in [
         full_name,
         email,
+        contact_email,
         institutional_id,
         university_code,
         account_type,
@@ -102,16 +134,29 @@ def signup():
 
     full_name = full_name.strip()
     email = email.strip().lower()
+    contact_email = contact_email.strip().lower()
     institutional_id = institutional_id.strip().upper()
     university_code = university_code.strip().upper()
     account_type = account_type.strip().lower()
 
     if not full_name:
-        return jsonify({"error": "Full name is required"}), 400
-
-    if "@" not in email:
         return jsonify({
-            "error": "Please provide a valid email address"
+            "error": "Full name is required"
+        }), 400
+
+    if not validate_email(email):
+        return jsonify({
+            "error": "Please provide a valid institutional email address"
+        }), 400
+
+    if not validate_email(contact_email):
+        return jsonify({
+            "error": "Please provide a valid personal contact email address"
+        }), 400
+
+    if email == contact_email:
+        return jsonify({
+            "error": "Personal email must be different from institutional email"
         }), 400
 
     if account_type not in ["student", "staff"]:
@@ -160,12 +205,18 @@ def signup():
 
     if User.query.filter_by(email=email).first():
         return jsonify({
-            "error": "Email already registered"
+            "error": "Institutional email already registered"
+        }), 409
+
+    if User.query.filter_by(contact_email=contact_email).first():
+        return jsonify({
+            "error": "Personal contact email already registered"
         }), 409
 
     user = User(
         full_name=full_name,
         email=email,
+        contact_email=contact_email,
         institutional_id=institutional_id,
         university_id=university.id,
         role=account_type,
@@ -188,12 +239,39 @@ def signup():
     session.clear()
     session["user_id"] = user.id
 
+    # Send the welcome email to the user's personal email.
+    email_sent = False
+
+    try:
+        email_sent = send_email(
+            to_email=user.contact_email,
+            subject="Welcome to FoundIt!",
+            content=(
+                f"Hello {user.full_name},\n\n"
+                "Welcome to FoundIt!\n\n"
+                "Your account has been created successfully. "
+                "You can now use FoundIt to report lost items, "
+                "report found items, and help reunite people "
+                "with their belongings.\n\n"
+                "Thank you for joining our community!\n\n"
+                "The FoundIt Team"
+            ),
+        )
+
+        print("WELCOME EMAIL RESULT:", email_sent)
+
+    except Exception as error:
+        print("WELCOME EMAIL ERROR:", str(error))
+        email_sent = False
+
     return jsonify({
         "message": "Account created successfully",
+        "welcome_email_sent": email_sent,
         "user": {
             "id": user.id,
             "full_name": user.full_name,
             "email": user.email,
+            "contact_email": user.contact_email,
             "institutional_id": user.institutional_id,
             "university": university.name,
             "role": user.role,
@@ -218,10 +296,14 @@ def login():
     email = data.get("email")
 
     if not isinstance(password, str):
-        return jsonify({"error": "Password must be a string"}), 400
+        return jsonify({
+            "error": "Password must be a string"
+        }), 400
 
     if not password:
-        return jsonify({"error": "Password is required"}), 400
+        return jsonify({
+            "error": "Password is required"
+        }), 400
 
     if institutional_id is not None:
         if not isinstance(institutional_id, str):
@@ -249,7 +331,9 @@ def login():
         email = email.strip().lower()
 
         if not email:
-            return jsonify({"error": "Email is required"}), 400
+            return jsonify({
+                "error": "Email is required"
+            }), 400
 
         user = User.query.filter_by(email=email).first()
 
@@ -275,6 +359,7 @@ def login():
             "id": user.id,
             "full_name": user.full_name,
             "email": user.email,
+            "contact_email": user.contact_email,
             "institutional_id": user.institutional_id,
             "role": user.role,
         },
@@ -288,13 +373,17 @@ def check_session():
     user_id = session.get("user_id")
 
     if not user_id:
-        return jsonify({"logged_in": False}), 200
+        return jsonify({
+            "logged_in": False
+        }), 200
 
     user = db.session.get(User, user_id)
 
     if not user:
         session.clear()
-        return jsonify({"logged_in": False}), 200
+        return jsonify({
+            "logged_in": False
+        }), 200
 
     return jsonify({
         "logged_in": True,
@@ -302,6 +391,7 @@ def check_session():
             "id": user.id,
             "full_name": user.full_name,
             "email": user.email,
+            "contact_email": user.contact_email,
             "institutional_id": user.institutional_id,
             "role": user.role,
         },
